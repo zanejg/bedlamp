@@ -7,7 +7,7 @@ import math
 import sys
 import time
 
-
+from full_seq import log_seq
 
 
 
@@ -25,47 +25,81 @@ class dimming_sequencer(object):
 
         return 1 - (nat_val/mx)
     
+    def linear_to_log(self, linear_val):
+        """
+        Using the correct formula return a suitably log spaced function 
+        based on the given linear float val between 0-1
+        
+        We need to get the end values right i.e. between 0 and 1
+        with inputs with the same range
+        So if we are using y=3**x as the basic curve we want the values given by that function between -2 and 2
+        to give the curve we want the manipulate the 0-1 input to be across that range
+        """
+        def this_func(xx):
+            return 2.0 ** xx
+        
+        topx = 2.0
+        botx = -2.0
+        # manipulate ip
+        curve_ip = (linear_val * (topx - botx)) - topx
+        # calc the actual func
+        rawret = this_func(curve_ip)
+        # now squash the o/p between 0-1. 
+        # need the max val i.e.o/p at topx
+        maxval = this_func(topx)
+        
+        ret = rawret/maxval
+        
+        
+        return ret
+    
+    # def create_full_dimming_sequence(self):
+    #     """
+    #     Create a sequence of 2048 coefficients to use for dimming a light in logarithmic seq.
+    #     For creating apparent linear dimming for human eye.
+    #     Returns a sequence of coeficients between zero and one that progresses downward 
+    #     logarithmically where the steps become smaller as it approaches 0
+    #     To get a curve that seems appropriate I have used nat logs between 1 and 100
+    #     """
+        
+    #     # get a sequnece of 2048 floats bet 1 and 128
+    #     max_val = 129
+    #     mx = math.log(max_val)
+
+    #     # to minimise mem usage we will be doing the full calcs on the one
+    #     # copy of the array
+    #     def get_seq_val(val):
+    #         nat_val=math.log(val)
+
+    #         return 1 - (nat_val/mx)
+
+    #     x = []
+    #     for i in range(1,129):
+    #         xf = float(i)
+    #         x.append(get_seq_val(xf))
+    #         for j in range(1,17):
+    #             jf = j/16.0
+    #             x.append(get_seq_val(xf+jf))
+    #             gc.collect()
+
+    #     # then get their nat logs
+    #     # y=[math.log(i) for i in x]
+    #     #y = [2**i for i in x]
+        
+    #     # need the max val
+    #     # mx = y[-1]
+    #     # then divide all the vals by the max val for a sequence bet 0-1
+    #     # coeffs = [1-c/mx for c in y]
+    #     # now reverse it for convenience
+    #     x.reverse()
+        
+    #     return x 
+    
+    #now trying a file that contains the premade seq
     def create_full_dimming_sequence(self):
-        """
-        Create a sequence of 2048 coefficients to use for dimming a light in logarithmic seq.
-        For creating apparent linear dimming for human eye.
-        Returns a sequence of coeficients between zero and one that progresses downward 
-        logarithmically where the steps become smaller as it approaches 0
-        To get a curve that seems appropriate I have used nat logs between 1 and 100
-        """
-        
-        # get a sequnece of 2048 floats bet 1 and 128
-        max_val = 129
-        mx = math.log(max_val)
+        return(log_seq)
 
-        # to minimise mem usage we will be doing the full calcs on the one
-        # copy of the array
-        def get_seq_val(val):
-            nat_val=math.log(val)
 
-            return 1 - (nat_val/mx)
-
-        x = []
-        for i in range(1,129):
-            xf = float(i)
-            x.append(get_seq_val(xf))
-            for j in range(1,17):
-                jf = j/16.0
-                x.append(get_seq_val(xf+jf))
-                gc.collect()
-
-        # then get their nat logs
-        # y=[math.log(i) for i in x]
-        #y = [2**i for i in x]
-        
-        # need the max val
-        # mx = y[-1]
-        # then divide all the vals by the max val for a sequence bet 0-1
-        # coeffs = [1-c/mx for c in y]
-        # now reverse it for convenience
-        x.reverse()
-        
-        return x 
 
 
 
@@ -107,8 +141,19 @@ class dimming_sequencer(object):
         # we want a relatively big step for our rotary switch control
         # so we will split the seq up into 64
         #stepnum = 64
-        step_size = int(dim_seq_len/(stepnum-1)) # we will only calc 1st stepnum-1
+        
+        
+        # to save memory use
+        # we need to replace the big sequence of floats in a log sequence with just the 
+        # log sequence of linearly increasing floats we then can conertha the log value with a call to 
+        # a convertor function
+        # step_size = int(dim_seq_len/(stepnum-1)) # we will only calc 1st stepnum-1
+        
         stepped_dimming_seq = [self.full_dimming_seq[i] for i in range(0,dim_seq_len,step_size)]
+
+
+
+
         # then ensure 1.0 is on the end
         stepped_dimming_seq.append(1.0)
         # now find our position in it
@@ -262,6 +307,19 @@ class Direct_LED_driver(object):
         self.dim_seq = seq_data['sequences']
         self.dim_posi = seq_data['position']
         self.levels = the_levels
+        for this_val in self.dim_seq['RED']:
+            print("{}".format(this_val))
+
+    def light_with_floats(self,duties,reset_seq=True):
+        """
+        takes a dict of floats keyed by colour
+        """
+        for col,duty in duties.items():
+                self.set_led(col,duty)
+        if(reset_seq):
+            self.dim_seq = None
+            self.dim_posi = None
+
     
     def get_posi_duties(self):
         return {
@@ -270,6 +328,19 @@ class Direct_LED_driver(object):
             "BLUE":self.dim_seq['BLUE'][self.dim_posi]
             
         }
+    
+    def get_posi(self):
+        """
+        For the max posi we will just return RED as they 
+        should all be the same
+        """
+        if not self.dim_seq:
+            return None
+        else:
+            return {
+                "posi":self.dim_posi,
+                "maxposi":len(self.dim_seq['RED']),
+            }
     
     def set_brightness_on_seq(self, posi):
         """
@@ -283,9 +354,8 @@ class Direct_LED_driver(object):
         self.light_with_floats({
             "RED": self.dim_seq['RED'][posi],
             "GREEN":self.dim_seq['GREEN'][posi] ,
-            "BLUE":self.dim_seq['BLUE'][posi]
-            
-        })
+            "BLUE":self.dim_seq['BLUE'][posi]   
+        },reset_seq=False)
 
 
     
@@ -315,15 +385,7 @@ class Direct_LED_driver(object):
         self.light_with_floats(self.get_posi_duties() ,reset_seq=False)
         
     
-    def light_with_floats(self,duties,reset_seq=True):
-        """
-        takes a dict of floats keyed by colour
-        """
-        for col,duty in duties.items():
-                self.set_led(col,duty)
-        if(reset_seq):
-            self.dim_seq = None
-            self.dim_posi = None
+    
         
     
     

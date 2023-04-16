@@ -1,0 +1,150 @@
+
+
+
+<html>
+    <head> 
+        <title>ESP Web Server</title> 
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <script src="https://cdn.jsdelivr.net/npm/@jaames/iro@5"></script>
+        <style>
+            html{font-family: Helvetica; display:inline-block; margin: 0px auto; text-align: center;}
+            h1{color: #0F3376; padding: 2vh;}
+            p{font-size: 1.0rem;}
+            .button{display: inline-block; 
+                    background-color: #e7bd3b; 
+                    border: none; 
+                    border-radius: 6px; 
+                    color: white; 
+                    padding: 10px 20px; 
+                    text-decoration: none; 
+                    font-size: 15px; 
+                    margin: 2px; 
+                    cursor: pointer;}
+            .redbutton{background-color: red;}
+            .bluebutton{background-color: blue;}
+            .greenbutton{background-color: green;}
+            
+            input[type="range"][orient="vertical"] {
+                writing-mode: bt-lr;
+                appearance: slider-vertical;
+                min:"0";
+                max:"255";
+            }
+            .brightness_slider{
+                        min:"0";
+                        max:"255";
+                    }
+            .grid-container {
+            display: grid;
+            grid-template-columns: auto auto auto;
+            background-color: #ffffff;
+            padding: 10px;
+            }
+
+            .grid-item {
+            background-color: rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(150,150,150, 0.8);
+            padding: 10px;
+            font-size: 15px;
+            text-align: center;
+            }
+
+
+
+        </style>
+        
+
+    </head>
+    <body > 
+        <script>
+            var cmd_array = {
+                "ALLHIGH":{'command':"ALLHIGH"},
+                /* rotating */
+                "OFF":{'command':"OFF"},
+            };
+            var colorPicker = new iro.ColorPicker('#colour_chooser');
+
+            // listen to a color picker's color:change event
+            // color:change callbacks receive the current color
+            colorPicker.on('color:change', function(color) {
+                // log the current color as a HEX string
+                console.log(color.hexString);
+                //set_all(color);
+            });
+
+            function send_command(the_cmd){
+                var xhttp = new XMLHttpRequest();
+                ret  = cmd_array[the_cmd];
+
+                retstr = JSON.stringify(ret)
+                // alert(retstr)
+                
+                xhttp.open("POST", "/", true);
+                xhttp.send("LAMP_COMMAND=|||"+retstr+"|||");
+                
+            }
+            function change_brightness(){
+                var all_slider = document.getElementById("all_slider");
+                
+                var the_val = all_slider.value
+                var xhttp = new XMLHttpRequest();
+
+                ret = {
+                    "command":"SETBRIGHTNESS",
+                    "value":the_val
+                }
+
+                //alert("command="+ret['command']+ " val="+the_val)
+
+                xhttp.open("POST", "/", true);
+                xhttp.send("LAMP_COMMAND=|||"+retstr+"|||");
+                    
+            }
+
+        </script>
+        <h1>Zane's ESP Lamp Web Server</h1> 
+        ## MICROPYTHON IMAGE ##
+        <div class="grid-container">
+            <div id= "grid1" class="grid-item">
+               1
+            </div>
+            <div id= "grid2" class="grid-item">
+                <button onclick="send_command('ALLHIGH')" class="button greenbutton">ON</button>
+                <button onclick="send_command('OFF')" class="button redbutton">OFF</button>
+            </div>
+            <div id= "grid3" class="grid-item">3</div>  
+            <div id= "grid4" class="grid-item">
+                4<br/>
+                
+            </div>
+            <div id= "grid5" class="grid-item">
+                5
+                <div id="colour_chooser"></div>
+            </div>
+            <div id= "grid6" class="grid-item">
+                6<br/>
+                <button onclick="send_increase(1)" class="button">^</button><br/>
+                <button onclick="send_decrease(1)" class="button">v</button>
+            </div>  
+            <div id= "grid7" class="grid-item">
+                7
+            </div>
+            <div id= "grid8" class="grid-item">8<br/>
+                <button onclick="choose_left()" class="button">Left</button>
+                <button onclick="choose_middle()" class="button">Middle</button>
+                <button onclick="choose_right()" class="button">Right</button><br/>
+                <button onclick="choose_all()" class="button">All</button><br/>
+            </div>
+            <div id= "grid9" class="grid-item">
+                9
+                <input type="range" orient="vertical" id="all_slider" onchange="change_brightness()" min="0" max="65" />
+            </div>
+            <div id= "grid10" class="grid-item">
+                10
+            </div>
+            <div id= "grid11" class="grid-item">11</div>
+            <div id= "grid12" class="grid-item">12</div>
+        </div>
+        
+    </body>
+</html>
