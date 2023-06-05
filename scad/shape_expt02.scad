@@ -33,5 +33,3 @@ for (this_sphere=spheres){
         sphere(this_sphere[0]);
     }
 }
-
-32%c2%adwroom%c2%ad32d how to put into programming mode

@@ -15,7 +15,18 @@
                     border: none; 
                     border-radius: 6px; 
                     color: white; 
-                    padding: 10px 20px; 
+                    padding: 5px 20px; 
+                    text-decoration: none; 
+                    font-size: 15px; 
+                    margin: 2px; 
+                    cursor: pointer;}
+            .selected-button{display: inline-block; 
+                    background-color: yellow; 
+                    border: 5px solid red;
+                    border-color: black; 
+                    border-radius: 6px; 
+                    color: black; 
+                    padding: 5px 20px; 
                     text-decoration: none; 
                     font-size: 15px; 
                     margin: 2px; 
@@ -35,10 +46,10 @@
                         max:"255";
                     }
             .grid-container {
-            display: grid;
-            grid-template-columns: auto auto auto;
-            background-color: #ffffff;
-            padding: 10px;
+                display: grid;
+                grid-template-columns: auto auto;
+                background-color: #ffffff;
+                padding: 10px;
             }
 
             .grid-item {
@@ -47,6 +58,15 @@
             padding: 10px;
             font-size: 15px;
             text-align: center;
+            }
+
+            .grid-lamp-choice{
+                background-color: rgba(255, 255, 255, 0.8);
+                border: 1px solid rgba(150,150,150, 0.8);
+                padding: 10px;
+                font-size: 15px;
+                text-align: center;
+                grid-column: 1 / span 2;
             }
 
 
@@ -62,7 +82,9 @@
                 /* rotating */
                 "OFF":{'command':"OFF"},
             };
-            var colorPicker = new iro.ColorPicker('#colour_chooser');
+            var colorPicker = new iro.ColorPicker('#colour_chooser', {
+                                    // Set the size of the color picker
+                                    width: 200});
 
             // listen to a color picker's color:change event
             // color:change callbacks receive the current color
@@ -70,6 +92,16 @@
                 // log the current color as a HEX string
                 console.log(color.hexString);
                 //set_all(color);
+
+                ret = {
+                    "command":"SETALLCOLOUR",
+                    "value":color.hexString,
+                }
+                var retstr = JSON.stringify(ret)
+                var xhttp = new XMLHttpRequest();
+                xhttp.open("POST", "/", true);
+                xhttp.send("LAMP_COMMAND=|||"+retstr+"|||");
+
             });
 
             function send_command(the_cmd){
@@ -93,8 +125,9 @@
                     "command":"SETBRIGHTNESS",
                     "value":the_val
                 }
+                var retstr = JSON.stringify(ret)
 
-                //alert("command="+ret['command']+ " val="+the_val)
+                //alert("command="+retstr)
 
                 xhttp.open("POST", "/", true);
                 xhttp.send("LAMP_COMMAND=|||"+retstr+"|||");
@@ -106,44 +139,37 @@
         ## MICROPYTHON IMAGE ##
         <div class="grid-container">
             <div id= "grid1" class="grid-item">
-               1
-            </div>
-            <div id= "grid2" class="grid-item">
+                1
                 <button onclick="send_command('ALLHIGH')" class="button greenbutton">ON</button>
                 <button onclick="send_command('OFF')" class="button redbutton">OFF</button>
             </div>
-            <div id= "grid3" class="grid-item">3</div>  
+            <div id= "grid2" class="grid-item">
+                2
+            </div>
+            <div id= "grid3" class="grid-item">
+                3
+                <div id="colour_chooser" width="200"></div>
+            </div>
             <div id= "grid4" class="grid-item">
                 4<br/>
-                
-            </div>
-            <div id= "grid5" class="grid-item">
-                5
-                <div id="colour_chooser"></div>
-            </div>
-            <div id= "grid6" class="grid-item">
-                6<br/>
                 <button onclick="send_increase(1)" class="button">^</button><br/>
-                <button onclick="send_decrease(1)" class="button">v</button>
+                <button onclick="send_decrease(1)" class="button">v</button><br/>
+                <input type="range" orient="vertical" id="all_slider" 
+                    onchange="change_brightness()" min="0" max="65" />
             </div>  
-            <div id= "grid7" class="grid-item">
-                7
-            </div>
-            <div id= "grid8" class="grid-item">8<br/>
+            
+            <div id= "grid5" class="grid-lamp-choice">5<br/>
                 <button onclick="choose_left()" class="button">Left</button>
                 <button onclick="choose_middle()" class="button">Middle</button>
                 <button onclick="choose_right()" class="button">Right</button><br/>
-                <button onclick="choose_all()" class="button">All</button><br/>
+                <button onclick="choose_all()" class="selected-button">_____All_____</button><br/>
             </div>
-            <div id= "grid9" class="grid-item">
-                9
-                <input type="range" orient="vertical" id="all_slider" onchange="change_brightness()" min="0" max="65" />
+            <div id= "grid6" class="grid-item">
+                6
+                
             </div>
-            <div id= "grid10" class="grid-item">
-                10
-            </div>
-            <div id= "grid11" class="grid-item">11</div>
-            <div id= "grid12" class="grid-item">12</div>
+            
+            <div id= "grid7" class="grid-item">7</div>
         </div>
         
     </body>

@@ -30,7 +30,7 @@ channels = [
 
 
 fld = LC.four_LED_driver(channels)
-
+fld.all_same_RGB("808080")
 
 def check_hex(the_hex):
     """
@@ -76,6 +76,7 @@ def parse_command(the_command_data):
 
     if command in single_commands.keys():
         single_commands[command]()
+        return
     elif command == 'SETBRIGHTNESS':
         if 'value' in the_command_data.keys():
             # the value from the web page is 0-MAXINT
@@ -86,7 +87,22 @@ def parse_command(the_command_data):
             #     "GREEN":this_duty,
             #     "BLUE":this_duty,
             # }
-            fld.set_all_on_seq(the_val)
+            if the_val == 0:
+                fld.all_off()
+                return
+            else:
+                fld.set_all_on_seq(the_val)
+                
+    elif command == 'SETALLCOLOUR':
+        if 'value' in the_command_data.keys():
+            the_value = the_command_data['value']
+            if the_value.startswith("#"):
+                the_value = the_value.strip("#")
+            print("parsed value={}".format(the_value))
+            fld.all_same_RGB(the_value)
+    elif command == "GETLEVEL":
+        pass
+
 
 
     else:

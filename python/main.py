@@ -7,12 +7,19 @@ import json
 import ure
 
 import time
-from web_page import upy_img
 from e32LEDdriver import parse_command
 
 # # To run the LEDs for testing
 # import e32LEDrun as run
 
+upy_img = """
+    <br/>
+    <a title="Micropython.org, MIT &lt;http://opensource.org/licenses/mit-license.php&gt;, via Wikimedia Commons" 
+        href="https://commons.wikimedia.org/wiki/File:MicroPython_new_logo.svg">
+        <img width="50" alt="MicroPython new logo" 
+            src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a7/MicroPython_new_logo.svg/256px-MicroPython_new_logo.svg.png">       
+    </a>
+    """
 
 
 
@@ -60,6 +67,7 @@ while True:
     elif(request[0:3] == 'GET'):
         """
         Serve the control page
+        
         """
         if len(path.strip()) == 0:
             # response = web_page()

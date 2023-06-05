@@ -7,7 +7,7 @@ import math
 import sys
 import time
 
-from full_seq import log_seq
+#from full_seq import log_seq
 
 
 
@@ -18,7 +18,8 @@ class dimming_sequencer(object):
     The big full dimming sequence is only held once.
     """
     def __init__(self):
-        self.full_dimming_seq = self.create_full_dimming_sequence()
+        #self.full_dimming_seq = self.create_full_dimming_sequence()
+        pass
 
     def get_seq_val(self,val):
         nat_val=math.log(val)
@@ -36,7 +37,7 @@ class dimming_sequencer(object):
         to give the curve we want the manipulate the 0-1 input to be across that range
         """
         def this_func(xx):
-            return 2.0 ** xx
+            return 8.0 ** xx
         
         topx = 2.0
         botx = -2.0
@@ -53,51 +54,11 @@ class dimming_sequencer(object):
         
         return ret
     
-    # def create_full_dimming_sequence(self):
-    #     """
-    #     Create a sequence of 2048 coefficients to use for dimming a light in logarithmic seq.
-    #     For creating apparent linear dimming for human eye.
-    #     Returns a sequence of coeficients between zero and one that progresses downward 
-    #     logarithmically where the steps become smaller as it approaches 0
-    #     To get a curve that seems appropriate I have used nat logs between 1 and 100
-    #     """
-        
-    #     # get a sequnece of 2048 floats bet 1 and 128
-    #     max_val = 129
-    #     mx = math.log(max_val)
-
-    #     # to minimise mem usage we will be doing the full calcs on the one
-    #     # copy of the array
-    #     def get_seq_val(val):
-    #         nat_val=math.log(val)
-
-    #         return 1 - (nat_val/mx)
-
-    #     x = []
-    #     for i in range(1,129):
-    #         xf = float(i)
-    #         x.append(get_seq_val(xf))
-    #         for j in range(1,17):
-    #             jf = j/16.0
-    #             x.append(get_seq_val(xf+jf))
-    #             gc.collect()
-
-    #     # then get their nat logs
-    #     # y=[math.log(i) for i in x]
-    #     #y = [2**i for i in x]
-        
-    #     # need the max val
-    #     # mx = y[-1]
-    #     # then divide all the vals by the max val for a sequence bet 0-1
-    #     # coeffs = [1-c/mx for c in y]
-    #     # now reverse it for convenience
-    #     x.reverse()
-        
-    #     return x 
     
-    #now trying a file that contains the premade seq
-    def create_full_dimming_sequence(self):
-        return(log_seq)
+    
+    # #now trying a file that contains the premade seq
+    # def create_full_dimming_sequence(self):
+    #     return(log_seq)
 
 
 
@@ -111,7 +72,6 @@ class dimming_sequencer(object):
         a specific RGB colour along with the position in the sequence that
         the given RGB value is in that sequence.
         """
-        # full_dimming_seq = create_full_dimming_sequence()
         
         # first we need the values as integers
         levels = rgb_to_ints(rgbstr)
@@ -128,34 +88,34 @@ class dimming_sequencer(object):
                         lesser_cols[1]:levels[lesser_cols[1]]}
         
         
+
         # now find what proportion of the full power the max level is
         full = 255.0
-        # the coefficient that will get the max level to full
-        full_max_coeff = ((full - max_level) + max_level) / max_level if max_level else 0
-        # we will need this to find where we are
+        
+        # we will need this to find where we are in the dimming sequence
         max_fraction = max_level/full
-        low = self.full_dimming_seq[0]
+        
         posi = 0
         
-        dim_seq_len = len(self.full_dimming_seq)
+        # dim_seq_len = len(self.full_dimming_seq)
         # we want a relatively big step for our rotary switch control
-        # so we will split the seq up into 64
-        #stepnum = 64
+        
+        # we will split the seq up into 64 steps between 0-1
+        step = 1.0/stepnum
+        linear_sequence = [0.0]
+        i=step
+        while i < 1.0 + step:
+            linear_sequence.append(i)
+            i += step
         
         
         # to save memory use
         # we need to replace the big sequence of floats in a log sequence with just the 
         # log sequence of linearly increasing floats we then can conertha the log value with a call to 
         # a convertor function
-        # step_size = int(dim_seq_len/(stepnum-1)) # we will only calc 1st stepnum-1
+        stepped_dimming_seq = [self.linear_to_log(rawi) for rawi in linear_sequence]
         
-        stepped_dimming_seq = [self.full_dimming_seq[i] for i in range(0,dim_seq_len,step_size)]
-
-
-
-
-        # then ensure 1.0 is on the end
-        stepped_dimming_seq.append(1.0)
+        
         # now find our position in it
         for posi,i in enumerate(stepped_dimming_seq):
             if max_fraction <= i:
@@ -163,7 +123,8 @@ class dimming_sequencer(object):
         position = posi
         # we need the ratios of the colours to stay the same over the range
         # so we will store the ratio of the lesser ones to the max value
-        lesser_ratios = {col:(val/max_level if max_level else 0) for col,val in lesser_levels.items()}
+        lesser_ratios = {col:(val/max_level if max_level else 0) 
+                         for col,val in lesser_levels.items()}
         
         # now we can build the sequence as 3 lists of values keyed by colour
         # the max colour will be the same as the stepped_dimming_seq
@@ -186,32 +147,6 @@ class dimming_sequencer(object):
 
 
 
-
-
-# channels = [
-# {
-#     "RED" : 0,
-#     "GREEN" : 1,
-#     "BLUE" : 2,
-# },
-# {
-#     "RED" : 5,
-#     "GREEN" : 4,
-#     "BLUE" : 3,
-# },
-# {
-#     "RED" : 8,
-#     "GREEN" : 7,
-#     "BLUE" : 6,
-# },
-# {
-#     "RED" : 11,
-#     "GREEN" : 10,
-#     "BLUE" : 9,
-# },
-# ]
-
-
 MAX = (2**16) - 1
 
 colour_sequencer = dimming_sequencer()
@@ -223,7 +158,7 @@ class Direct_LED_driver(object):
     Adaptation of driver written for the Magicball
     Especially for use with ESP32
     """
-    fPWM = 1000
+    fPWM = 250
     
     def __init__(self,channels):
         """
@@ -249,10 +184,13 @@ class Direct_LED_driver(object):
         self.channels = channels
 
         self.pins = {
-              "RED" : PWM(Pin(channels['RED'])),
-            "GREEN" : PWM(Pin(channels['GREEN'])),
-             "BLUE" : PWM(Pin(channels['BLUE'])),
+              "RED" : PWM(Pin(channels['RED']), freq=self.fPWM ),
+            "GREEN" : PWM(Pin(channels['GREEN']), freq=self.fPWM),
+             "BLUE" : PWM(Pin(channels['BLUE']), freq=self.fPWM),
         }
+        # for col,this_pin in self.pins.items():
+        #     this_pin.
+
 
         self.dim_seq = None
         self.dim_posi = None
@@ -263,13 +201,16 @@ class Direct_LED_driver(object):
         rawduty is a 0-1 float
         So must be converted to the ESP32's level
         """
-        MAX = (2**16) - 1
+        gc.collect()
         duty = int(MAX * rawduty)
-        # print("colour={} raw={} duty={}".format(
-        #     colour, rawduty, duty
-        # ))
+        print("colour={} raw={} duty={}".format(
+            colour, rawduty, duty
+        ))
         self.pins[colour].duty_u16(duty)
 
+    def turn_off(self):
+        for col in ['RED','GREEN','BLUE']:
+            self.pins[col].duty_u16(0)
 
 
     def hex_to_level(self,hex):
@@ -292,6 +233,8 @@ class Direct_LED_driver(object):
 
     def light_with_RGB(self,the_RGB, stepcount=64):
         """
+        Will light the LED with the given RGB colour. 
+        BUT ALSO 
         To create a dimmable sequence, this needs to be called first.
         stepcount defines how many steps in the dimming sequence
         """
@@ -307,8 +250,8 @@ class Direct_LED_driver(object):
         self.dim_seq = seq_data['sequences']
         self.dim_posi = seq_data['position']
         self.levels = the_levels
-        for this_val in self.dim_seq['RED']:
-            print("{}".format(this_val))
+        # for this_val in self.dim_seq['RED']:
+        #     print("{}".format(this_val))
 
     def light_with_floats(self,duties,reset_seq=True):
         """
@@ -412,7 +355,8 @@ class four_LED_driver(object):
                 this_LED.set_led(col,duty)
         
     def all_off(self):
-        self.all_same_RGB("000000")
+        for this_LED in self.LEDs:
+            this_LED.turn_off()
         
     def set_each(self,the_leds):
         """

@@ -1,7 +1,7 @@
 # Complete project details at https://RandomNerdTutorials.com
 
 try:
-    import usocket as socket
+    import socket as socket
 except:
     import socket
 
@@ -22,11 +22,14 @@ password = secret_settings.password
 
 station = network.WLAN(network.STA_IF)
 
+
 station.active(True)
+print(station.config(dhcp_hostname = "zlamp"))
 station.connect(ssid, password)
 
 while station.isconnected() == False:
     pass
+
 
 print('Lamp Connection successful')
 print(station.ifconfig())
