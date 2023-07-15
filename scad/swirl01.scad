@@ -4,7 +4,7 @@ include <modelling_tests.scad>
 
 $fn=100;
 
-IS_AN_END_PIECE = false;
+IS_AN_END_PIECE = true;
 
 // Just testing the scaling
 // !union(){
@@ -67,7 +67,6 @@ module fullswirl(the_pts){
 
 
 
-
 // !fullswirl(shape_pts);
 
 module lamp_section(){
@@ -80,7 +79,8 @@ module lamp_section(){
                         fullswirl(shape_pts);
                     }
                 }
-                translate([0,0,-0.1]){
+                //remove the cavity 
+                translate([0,0,9]){
                     fullswirl(scaled_pts);
                     translate([inter_swirl_offset * xos, 0, 0]){
                         fullswirl(scaled_pts);
@@ -100,6 +100,7 @@ module lamp_section(){
 }
 
 
+
 module LED_support(){
     rotate([40, 0, 0]){
         difference(){
@@ -114,11 +115,11 @@ module LED_support(){
 // ###############################################################
 // One main section
 // BOX_TN = 2.5;
-// CAVITY_HT = 40;
+// cavity_ht = 40;
 // MBOX_WD = 100;
 // TAB_LN = 30;
 // cavity_wd = MBOX_WD -(BOX_TN *4);
-// tab_ht = CAVITY_HT - BOX_TN;
+// tab_ht = cavity_ht - BOX_TN;
 // str_ang_cos = cos(straight_ang);
 // str_ang_sin = sin(straight_ang);
 // swirl_center_y = (STRAIGHT_LN*2) * str_ang_cos + (str_ang_sin * (SHAPE_WD + 2*INNER_RD));
@@ -197,7 +198,7 @@ module one_main_section(){
                 }
                 // Main box cavity
                 translate([-0.5, -40, -BOX_TN]){
-                    cube([section_wd + 1,cavity_wd ,CAVITY_HT ], center=false);   
+                    cube([section_wd + 1,cavity_wd ,cavity_ht ], center=false);   
                 }
             
                 // cable holes
@@ -222,19 +223,20 @@ module one_main_section(){
 
             difference(){
                 union(){
-                    // glue surfaces
+                    //################################################
+                    // GLUE SURFACES
                     translate( [swirl_center_x, 
                                 -swirl_center_y, 
-                                40 ]){
+                                box_ht ]){
                         cylinder(h = BOX_TN, r = INNER_RD * 1.5);
                     }
         
                     
-                    translate([58, 0, 40]){
+                    translate([58, 0, box_ht + BOX_TN/2]){
                         cube([100, 15, BOX_TN], center=true);
                     }
                     
-                    translate([swirl_center_x - 43, 30, 40]){
+                    translate([swirl_center_x - 43, 30, box_ht + BOX_TN/2]){
                         difference(){
                             cube([15, 52, BOX_TN], center=true);
                             translate([2, 28, 0]){
@@ -244,7 +246,7 @@ module one_main_section(){
                             }
                         }
                     }
-                    translate([swirl_center_x + 43, 30, 40]){
+                    translate([swirl_center_x + 43, 30, box_ht + BOX_TN/2]){
                         difference(){
                             cube([15, 52, BOX_TN], center=true);
                             translate([0, 28, 0]){
@@ -254,19 +256,88 @@ module one_main_section(){
                             }
                         }
                     }
+
+                    translate([swirl_center_x + SHAPE_WD +2.5, -22, box_ht + BOX_TN/2]){
+                        difference(){
+                            rotate([0, 0, 20]){
+                                cube([10, 35, BOX_TN], center=true);
+                            }
+                            translate([11, 0, 0]){
+                                rotate([0, 0, 10]){
+                                    cube([20, 45, 12], center=true);
+                                }
+                            }
+                        }
+                    }
+
+                    translate([swirl_center_x - SHAPE_WD -2.5, -22, box_ht + BOX_TN/2]){
+                        difference(){
+                            rotate([0, 0, -20]){
+                                cube([10, 35, BOX_TN], center=true);
+                            }
+                            translate([-11, 0, 0]){
+                                rotate([0, 0, -10]){
+                                    cube([20, 45, 12], center=true);
+                                }
+                            }
+                        }
+                    }
+
+                    translate([swirl_center_x+18, -20, box_ht + BOX_TN/2]){
+                        rotate([0, 0, 50]){
+                            cube([SHAPE_WD -10, 8, BOX_TN], center=true);
+                        }
+                    }
+                    translate([swirl_center_x-18, -20, box_ht + BOX_TN/2]){
+                        rotate([0, 0, -50]){
+                            cube([SHAPE_WD -10, 8, BOX_TN], center=true);
+                        }
+                    }
+
+                    translate([swirl_center_x + 26, 18, box_ht + BOX_TN/2]){
+                        rotate([0, 0, -50]){
+                            cube([SHAPE_WD -10, 8, BOX_TN], center=true);
+                        }
+                    }
+                    translate([swirl_center_x - 27, 18, box_ht + BOX_TN/2]){
+                        rotate([0, 0, 50]){
+                            cube([SHAPE_WD -10, 8, BOX_TN], center=true);
+                        }
+                    }
+
+
+
+                    // Front base circular thickening
+                    swirl_rd = (INNER_RD + SHAPE_WD) * 0.98;
+                    translate([swirl_center_x - 0.1, -swirl_center_y ,  box_ht + BOX_TN/2]){
+                        difference(){
+                            cylinder(h = BOX_TN, r = swirl_rd, center = true);
+                            cylinder(h = BOX_TN * 1.1, r = swirl_rd - 5, center = true);
+                            translate([0, SHAPE_WD-5, 0]){
+                                cube([SHAPE_WD * 2.2, SHAPE_WD * 1.5 , BOX_TN * 1.1], center=true);
+                            }
+                        }
+                    }
+
+
+
+
+                    //##############################################
+
+
                     // screwhole stanchions
                     for(posi = SCREWHOLE_PAIR_XY){
-                        translate([posi[0], posi[1], 40.1]){
+                        translate([posi[0], posi[1], box_ht + 0.1]){
                             cylinder(h = 10, r = SCREW_STANCHION_RD);
                         }
                     }
                     // strengthening for screw arms
-                    translate([swirl_center_x + 43, 25, 40]){
+                    translate([swirl_center_x + 43, 25, box_ht + 3]){
                         rotate([0, 0, 12]){
                             cube([BOX_TN, 52, 6], center=true);
                         }
                     }
-                    translate([swirl_center_x - 43, 25, 40]){
+                    translate([swirl_center_x - 43, 25, box_ht + 3]){
                         rotate([0, 0, -12]){
                             cube([BOX_TN, 52, 6], center=true);
                         }
@@ -275,13 +346,13 @@ module one_main_section(){
                 }
                 // screwholes
                 for(posi = SCREWHOLE_PAIR_XY){
-                    translate([posi[0], posi[1], 40]){
+                    translate([posi[0], posi[1], box_ht]){
                         cylinder(h = 10, r = 2/2);
                     }
                 }
                 translate([swirl_center_x, 
                                 -swirl_center_y, 
-                                39 ]){
+                                box_ht - 1 ]){
                     cylinder(h = 5, r = 3.5/2);
                     translate([0, 0, 1.1]){
                         cylinder(h = 2.5, r2 = 7/2, r1=2/2);
@@ -292,7 +363,7 @@ module one_main_section(){
         }
 
         // define top part
-        translate([50, 0, 85.1]){
+        translate([50, 0, box_ht + 45 ]){
             cube([150, 200, 90], center=true);
         }
     }
@@ -310,10 +381,10 @@ module one_main_section(){
                 }
             }
             hull(){
-                translate([0, SHAPE_WD/2 + INNER_RD, 40.5]){
+                translate([0, SHAPE_WD/2 + INNER_RD, box_ht + 0.5]){
                     cube([1,SHAPE_WD ,1 ], center=true);
                 }
-                translate([-10, SHAPE_WD/2 + INNER_RD, 40.5]){
+                translate([-10, SHAPE_WD/2 + INNER_RD, box_ht + 0.5]){
                     cube([1,1 ,1 ], center=true);
                 }
             }
@@ -322,7 +393,12 @@ module one_main_section(){
 
 }
 
-one_main_section();
+//one_main_section();
+
+mirror(v = [1,0,0]){
+    one_main_section();
+} 
+
 // difference(){
 //     one_main_section();
 //     translate([50, 0, 100]){

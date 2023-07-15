@@ -1,0 +1,25 @@
+#!/bin/bash
+
+# trash the present contents of the ESP32
+esptool.py --port /dev/ttyUSB0 erase_flash
+
+# rewite the MicroPython
+# old version esp32-ota-20220618-v1.19.1.bin
+esptool.py --chip esp32 --port /dev/ttyUSB0 \
+    write_flash -z 0x1000 ../../Downloads/esp32-20230426-v1.20.0.bin
+
+
+
+# the system boot file
+ampy -p /dev/ttyUSB0 put uweb_boot.py boot.py
+
+# LED drivers
+ampy -p /dev/ttyUSB0 put LED_control.py
+ampy -p /dev/ttyUSB0 put e32LEDdriver.py
+
+# the UI web page
+ampy -p /dev/ttyUSB0 put lamp_page.html
+
+# the main file to run
+ampy -p /dev/ttyUSB0 put main.py
+

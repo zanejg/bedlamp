@@ -22,8 +22,10 @@ straight_ang = (SWIRL_ANG - 180)/2;
 // ];
 
 
-BASE_HT = 50;
+BASE_HT = 60;
 PEAK_HT = 60;
+box_ht = BASE_HT * 5/6;
+
 
 shape_pts = [
     [0, 0],
@@ -60,11 +62,11 @@ section_wd = (SHAPE_WD*2) + (INNER_RD*2) + inter_swirl_gap;
 
 
 BOX_TN = 2.5;
-CAVITY_HT = 40;
+cavity_ht = box_ht ;//* 4/5;
 MBOX_WD = 100;
 TAB_LN = 30;
 cavity_wd = MBOX_WD -(BOX_TN *4);
-tab_ht = CAVITY_HT - BOX_TN;
+tab_ht = cavity_ht - BOX_TN;
 str_ang_cos = cos(straight_ang);
 str_ang_sin = sin(straight_ang);
 swirl_center_y = (STRAIGHT_LN*2) * str_ang_cos + (str_ang_sin * (SHAPE_WD + 2*INNER_RD));
@@ -77,6 +79,9 @@ SCREWHOLE_PAIR_XY=[
     [swirl_center_x + SCREWHOLE_X_OS,SCREWHOLE_Y],
     [swirl_center_x - SCREWHOLE_X_OS,SCREWHOLE_Y]
 ];
+
+
+POWER_FLEX_POSI = [100, -37, 20];
 
 
 

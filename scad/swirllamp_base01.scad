@@ -2,7 +2,7 @@ include <swirl_common_vars.scad>
 include <modelling_tests.scad>
 
 $fn=100;
-IS_RIGHT_END = false;
+IS_RIGHT_END = true;
 IS_LEFT_END = false;
 
 IS_AN_END_PIECE = IS_RIGHT_END || IS_LEFT_END;
@@ -122,137 +122,190 @@ module glue_tab_shape(){
 module one_main_section(){
     difference(){
         union(){
-            lamp_section();
-            translate([0, -45, 0]){
-                cube([section_wd,100 ,40 ], center=false);   
-            }
-            // LED Supports
-            translate([32, -49, 25]){
-                LED_support();
-            }
-            translate([84, -49, 25]){
-                LED_support();
-            }
-
-            // Cylinder loop strengthening
-            intersection(){
+            difference(){
                 union(){
-                    // corner ends
-                    translate([110, -52, 20]){
-                        rotate([45, 0, 0]){
-                            cube([10, 25, BOX_TN], center=true);
-                        }
+                    lamp_section();
+                    // main box
+                    translate([0, -45, 0]){
+                        cube([section_wd,100 , box_ht], center=false);   
                     }
-                    translate([6, -52, 20]){
-                        rotate([45, 0, 0]){
-                            cube([10, 25, BOX_TN], center=true);
-                        }
+                    // LED Supports
+                    translate([32, -49, 35]){
+                        LED_support();
                     }
-                    // diag struts
-                    translate([30, -86, 20]){
-                        rotate([0, 0, 60]){
-                            rotate([-45, 0, 0]){
-                                cube([10, 45, BOX_TN], center=true);
+                    translate([84, -49, 35]){
+                        LED_support();
+                    }
+        
+                    // Cylinder loop strengthening
+                    intersection(){
+                        union(){
+                            // corner ends
+                            translate([110, -52, 20]){
+                                rotate([45, 0, 0]){
+                                    cube([10, 25, BOX_TN], center=true);
+                                }
                             }
-                        }
-                    }
-                    translate([86, -86, 20]){
-                        rotate([0, 0, -60]){
-                            rotate([-45, 0, 0]){
-                                cube([10, 45, BOX_TN], center=true);
+                            translate([6, -52, 20]){
+                                rotate([45, 0, 0]){
+                                    cube([10, 25, BOX_TN], center=true);
+                                }
                             }
+                            // diag struts
+                            translate([30, -86, 20]){
+                                rotate([0, 0, 60]){
+                                    rotate([-45, 0, 0]){
+                                        cube([10, 45, BOX_TN], center=true);
+                                    }
+                                }
+                            }
+                            translate([86, -86, 20]){
+                                rotate([0, 0, -60]){
+                                    rotate([-45, 0, 0]){
+                                        cube([10, 45, BOX_TN], center=true);
+                                    }
+                                }
+                            }
+        
+                        }
+                        // trim off anything outside the loop
+                        translate([58, -36, 0]){
+                            cylinder(h = 50, r = 56);
                         }
                     }
-
                 }
-                // trim off anything outside the loop
-                translate([58, -36, 0]){
-                    cylinder(h = 50, r = 56);
+                // Main box cavity
+                translate([-0.5, -40, -BOX_TN]){
+                    cube([section_wd + 1,cavity_wd ,cavity_ht ], center=false);   
                 }
-            }
-        }
-        // Main box cavity
-        translate([-0.5, -40, -BOX_TN]){
-            cube([section_wd + 1,cavity_wd ,CAVITY_HT ], center=false);   
-        }
-    
-        // cable holes
-        translate([25, -34, 40]){
-            cube([12,8 , 10], center=true);
-        }
-        translate([90, -34, 40]){
-            cube([12,8 , 10], center=true);
-        }
-        // glue tab cavities
-        if(!IS_AN_END_PIECE || IS_RIGHT_END){
-            translate([TAB_LN/4, -40 - (BOX_TN* 0.25), tab_ht *0.2]){
-                glue_tab_shape();
-            }
-        }
-        if(!IS_AN_END_PIECE || IS_LEFT_END){
-            translate([section_wd - TAB_LN/4, 50 + (BOX_TN* 0.25), tab_ht *0.2]){
-                glue_tab_shape();
-            }
-        }
-
-        // swirl holding screwholes
-        for(posi = SCREWHOLE_PAIR_XY){
-            #translate([posi[0], posi[1], 38.5]){
-                cylinder(h = 5, r = 3.5/2);
-                    translate([0, 0, -1.1]){
-                        cylinder(h = 2.5, r1 = 7/2, r2=2/2);
-                    }
-            }
-        }
-    
-        // TEMP chop off top for dev
-        #translate([50, 0, 85]){
-            cube([150, 200, 90], center=true);
-        }
-    }
-    // ###########################################################
-    // glue tabs
-    if(!IS_AN_END_PIECE || IS_LEFT_END){
-        translate([section_wd, -(cavity_wd/2 - BOX_TN*1.5), tab_ht/2]){
-            intersection(){
-                cube([TAB_LN, BOX_TN, tab_ht], center=true);
-                translate([TAB_LN/4, 0, -tab_ht *0.3]){
-                    glue_tab_shape();
+            
+                // cable holes
+                translate([25, -34, cavity_ht]){
+                    cube([12,8 , 10], center=true);
                 }
-            }
-        }
-    }
-    
-    if(!IS_AN_END_PIECE || IS_RIGHT_END){
-        translate([0, (cavity_wd/2 + BOX_TN*2.5), tab_ht/2]){
-            intersection(){
-                cube([TAB_LN, BOX_TN, tab_ht], center=true);
-                translate([-TAB_LN/4, 0, -tab_ht *0.3]){
-                    glue_tab_shape();
+                translate([90, -34, cavity_ht]){
+                    cube([12,8 , 10], center=true);
                 }
                 
+        
+        
+                // glue tab cavities
+                if(!IS_AN_END_PIECE || IS_RIGHT_END){
+                    translate([TAB_LN/4, -40 - (BOX_TN* 0.25), tab_ht *0.2]){
+                        glue_tab_shape();
+                    }
+                }
+                if(!IS_AN_END_PIECE || IS_LEFT_END){
+                    translate([section_wd - TAB_LN/4, 50 + (BOX_TN* 0.25), tab_ht *0.2]){
+                        glue_tab_shape();
+                    }
+                }
+        
+                // swirl holding screwholes
+                for(posi = SCREWHOLE_PAIR_XY){
+                    translate([posi[0], posi[1], box_ht-1.5]){
+                        cylinder(h = 5, r = 3.5/2);
+                            translate([0, 0, -1.1]){
+                                cylinder(h = 2.5, r1 = 7/2, r2=2/2);
+                            }
+                    }
+                }
+
+                translate([swirl_center_x, -swirl_center_y, box_ht -10]){
+                    cylinder(h = 11, r = 2/2);
+                }
+            
+                // TEMP chop off top for dev
+                translate([50, 0, box_ht + 45]){
+                    cube([150, 200, 90], center=true);
+                }
             }
+            // ###########################################################
+            // glue tabs
+            if(!IS_AN_END_PIECE || IS_LEFT_END){
+                translate([section_wd, -(cavity_wd/2 - BOX_TN*1.5), tab_ht/2]){
+                    intersection(){
+                        cube([TAB_LN, BOX_TN, tab_ht], center=true);
+                        translate([TAB_LN/4, 0, -tab_ht *0.3]){
+                            glue_tab_shape();
+                        }
+                    }
+                }
+            }
+            
+            if(!IS_AN_END_PIECE || IS_RIGHT_END){
+                translate([0, (cavity_wd/2 + BOX_TN*2.5), tab_ht/2]){
+                    intersection(){
+                        cube([TAB_LN, BOX_TN, tab_ht], center=true);
+                        translate([-TAB_LN/4, 0, -tab_ht *0.3]){
+                            glue_tab_shape();
+                        }
+                        
+                    }
+                }
+            }
+            // End caps
+            if (IS_LEFT_END){
+                translate([BOX_TN/2, 5, (cavity_ht -BOX_TN)/2 + 0.5]){
+                    cube([BOX_TN, cavity_wd + 1, cavity_ht - BOX_TN +1], center=true);
+                }
+            }
+            if (IS_RIGHT_END){
+                difference(){
+                    translate([section_wd - BOX_TN/2, 5, (cavity_ht -BOX_TN)/2 + 0.5]){
+                        cube([BOX_TN, cavity_wd + 1, cavity_ht - BOX_TN +1], center=true);
+                    }
+                    // Power flex hole
+                    translate([112, -35, 8/2]){
+                        rotate([0,90,0]){
+                            cylinder(h = 5, r = 8/2);
+                            translate([8/2, 0, 5/2]){
+                                cube([8, 8, 5], center=true);
+                            }
+                        }
+                    }
+                }
+                 // power flex strain relief
+                translate(POWER_FLEX_POSI){
+                    difference(){
+                        cube([24, 7, 15], center=true);
+                        translate([0, 2.5, 8]){
+                            rotate([40, 0, 0]){
+                                cube([30, 10, 15], center=true);
+                            }
+                        }
+                        cube([8, 8, 18], center=true);
+                        
+                    }
+                }
+            }
+            //#################################################################
+            // screwhole stanchions
+            translate([swirl_center_x, -swirl_center_y, box_ht -10]){
+                difference(){
+                    cylinder(h = 10, r = SCREW_STANCHION_RD);
+                    translate([0, 0, 0]){
+                        cylinder(h = 11, r = 2/2);
+                    }
+                }
+            }
+        
+           
         }
-    }
-
-    if (IS_LEFT_END){
-        translate([BOX_TN/2, 5, (CAVITY_HT -BOX_TN)/2 + 0.5]){
-            cube([BOX_TN, cavity_wd + 1, CAVITY_HT - BOX_TN +1], center=true);
-        }
-    }
-    if (IS_RIGHT_END){
-        translate([section_wd - BOX_TN/2, 5, (CAVITY_HT -BOX_TN)/2 + 0.5]){
-            cube([BOX_TN, cavity_wd + 1, CAVITY_HT - BOX_TN +1], center=true);
-        }
-    }
-    //#################################################################
-    // screwhole stanchions
-
-    translate([swirl_center_x, -swirl_center_y, 30]){
-        difference(){
-            cylinder(h = 10, r = SCREW_STANCHION_RD);
-            #translate([0, 0, 0]){
-                cylinder(h = 11, r = 2/2);
+        
+        if (IS_RIGHT_END){
+            #translate(POWER_FLEX_POSI){
+                // power flex strain relief screwholes
+                translate([-8, 5, -4]){
+                    rotate([90, 0, 0]){
+                        cylinder(h = 12, r = 2/2);
+                    }
+                }
+                translate([8, 5, -4]){
+                    rotate([90, 0, 0]){
+                        cylinder(h = 12, r = 2/2);
+                    }
+                }
             }
         }
     }
