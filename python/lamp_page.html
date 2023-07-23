@@ -47,15 +47,30 @@
                     }
             .grid-container {
                 display: grid;
+                /* grid-auto-columns: 70px; */
                 grid-template-columns: auto auto;
                 background-color: #ffffff;
-                padding: 10px;
+                padding: 5px;
+            }
+            .dimmer_grid_container {
+                display: grid;
+                grid-template-columns: auto auto;
+                background-color: #ffffff;
+                padding: 1px;
+                gap: 0px;
             }
 
             .grid-item {
             background-color: rgba(255, 255, 255, 0.8);
             border: 1px solid rgba(150,150,150, 0.8);
-            padding: 10px;
+            padding: 5px;
+            font-size: 15px;
+            text-align: center;
+            }
+            .dimgrid-item {
+            background-color: rgba(255, 255, 255, 0.8);
+            /* border: 1px solid rgba(150,150,150, 0.8); */
+            padding: 1px;
             font-size: 15px;
             text-align: center;
             }
@@ -75,7 +90,7 @@
         
 
     </head>
-    <body > 
+    <body onload="get_current_state()"> 
         <script>
             var cmd_array = {
                 "ALLHIGH":{'command':"ALLHIGH"},
@@ -115,8 +130,43 @@
                 xhttp.send("LAMP_COMMAND=|||"+retstr+"|||");
                 
             }
-            function change_brightness(){
+
+            function send_increase(amount){
                 var all_slider = document.getElementById("all_slider");
+
+                var present_value = parseInt(all_slider.value);
+                var new_value = present_value + parseInt(amount);
+
+                if (new_value > 65){
+                    new_value = 65;
+                }
+
+                all_slider.value = new_value;
+                change_brightness();
+            }
+
+            function send_decrease(amount){
+                var all_slider = document.getElementById("all_slider");
+
+                // get the current value
+                var present_value =  parseInt(all_slider.value);
+                var new_value = present_value - parseInt(amount);
+
+                if (new_value < 0){
+                    new_value = 0;
+                }
+
+                all_slider.value = new_value;
+                change_brightness();
+            }
+
+
+            function change_brightness(){
+                /*
+                Only for the slider
+                */
+                var all_slider = document.getElementById("all_slider");
+                
                 
                 var the_val = all_slider.value
                 var xhttp = new XMLHttpRequest();
@@ -134,38 +184,108 @@
                     
             }
 
+            function choose_setting(num){
+                ret = {
+                    "command":"CHOOSESETTING",
+                    "value":num
+                }
+                var retstr = JSON.stringify(ret)
+                var xhttp = new XMLHttpRequest();
+
+                xhttp.open("POST", "/", true);
+                xhttp.send("LAMP_COMMAND=|||"+retstr+"|||");
+
+                get_current_state()
+
+            }
+
+            function save_setting(num){
+                ret = {
+                    "command":"SAVESETTING",
+                    "value":num
+                }
+                var retstr = JSON.stringify(ret)
+                var xhttp = new XMLHttpRequest();
+
+                xhttp.open("POST", "/", true);
+                xhttp.send("LAMP_COMMAND=|||"+retstr+"|||");
+
+            }
+            async function get_current_state(){
+                const GET_STATE_URL = "/GETLEVEL"
+                const response = await fetch(GET_STATE_URL);
+
+                const data = await response.json();
+                console.log(data);
+
+                var all_slider = document.getElementById("all_slider");
+                all_slider.value = data[0].seq_position;
+
+                colorPicker.color.hexString = data[0].RGB;
+
+            }
+
+
+
+
         </script>
         <h1>Zane's ESP Lamp Web Server</h1> 
         ## MICROPYTHON IMAGE ##
         <div class="grid-container">
             <div id= "grid1" class="grid-item">
                 1
-                <button onclick="send_command('ALLHIGH')" class="button greenbutton">ON</button>
+                
                 <button onclick="send_command('OFF')" class="button redbutton">OFF</button>
             </div>
             <div id= "grid2" class="grid-item">
                 2
             </div>
             <div id= "grid3" class="grid-item">
-                3
-                <div id="colour_chooser" width="200"></div>
+                Choose<br/>
+                <button onclick="choose_setting(0)" class="selected-button">---FIRST---</button><br/>
+                <button onclick="choose_setting(1)" class="button">Second</button>
+                <button onclick="choose_setting(2)" class="button">Third</button>
+                <button onclick="choose_setting(3)" class="button">Fourth</button><br/>
+                <br/>
+                <br/>
+                <button onclick="send_command('ALLHIGH')" class="button greenbutton">ALL HIGH</button>
+                
             </div>
             <div id= "grid4" class="grid-item">
                 4<br/>
-                <button onclick="send_increase(1)" class="button">^</button><br/>
-                <button onclick="send_decrease(1)" class="button">v</button><br/>
-                <input type="range" orient="vertical" id="all_slider" 
-                    onchange="change_brightness()" min="0" max="65" />
+                <div class="dimmer_grid_container">
+                    <div id= "dimgrid1" class="dimgrid-item"></div>
+                    <div id= "dimgrid2" class="dimgrid-item">
+                        <button onclick="send_increase(1)" class="button">^</button><br/>
+                    </div>
+                    <div id= "dimgrid3" class="dimgrid-item">
+                        <input type="range" orient="vertical" id="all_slider" 
+                            onchange="change_brightness()" min="0" max="65" />
+                    </div>
+                    <div id= "dimgrid4" class="dimgrid-item"></div>
+                    <div id= "dimgrid5" class="dimgrid-item"></div>
+                    <div id= "dimgrid6" class="dimgrid-item">
+                        <button onclick="send_decrease(1)" class="button">v</button><br/>
+                    </div>
+                    
+                </div>
             </div>  
             
             <div id= "grid5" class="grid-lamp-choice">5<br/>
-                <button onclick="choose_left()" class="button">Left</button>
-                <button onclick="choose_middle()" class="button">Middle</button>
-                <button onclick="choose_right()" class="button">Right</button><br/>
-                <button onclick="choose_all()" class="selected-button">_____All_____</button><br/>
+                
+                
+            </div>
+            <div id= "grid5.5" class="grid-lamp-choice">-------------------------<br/>
             </div>
             <div id= "grid6" class="grid-item">
-                6
+                <div id="colour_chooser" width="200"></div><br/>
+                Save<br/>
+                FIRST is default for power on<br/>
+                <button onclick="save_setting(0)" class="button">FIRST</button><br/>
+                <button onclick="save_setting(1)" class="button">Second</button><br/>
+                <button onclick="save_setting(2)" class="button">Third</button><br/>
+                <button onclick="save_setting(3)" class="button">Fourth</button><br/>
+                
                 
             </div>
             

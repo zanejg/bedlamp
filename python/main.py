@@ -6,8 +6,10 @@ import socket
 import json
 import ure
 
+
 import time
-from e32LEDdriver import parse_command
+#from e32LEDdriver import eld.parse_command
+import e32LEDdriver as eld
 
 # # To run the LEDs for testing
 # import e32LEDrun as run
@@ -37,6 +39,8 @@ path_rex = ure.compile(".*GET \/(.*) HTTP.*")
 print("About to start event loop")
 
 while True:
+   
+
     conn, addr = the_socket.accept()
     print('Got a connection from %s' % str(addr))
     request = conn.recv(512)
@@ -62,7 +66,7 @@ while True:
             cmd = json.loads(passed_cmd)
             print("PASSED COMMAND = #{}#".format(cmd))
             # SEND THE COMMAND TO THE LED DRIVER
-            parse_command(cmd)
+            eld.parse_command(cmd)
             
     elif(request[0:3] == 'GET'):
         """
@@ -86,14 +90,24 @@ while True:
 
             
         elif path == "GETLEVEL":
-            the_level = parse_command("GETLEVEL")
-            response = json.dumps({
-                'level':the_level
-            })
-            conn.send('HTTP/1.1 200 OK\n')
-            conn.send('Content-Type: application/json\n')
-            conn.sendall(response)
-            
+            the_levels = eld.parse_command({'command':"GETLEVEL"})
+            response = "\n{}\n".format(json.dumps(the_levels))
+            responsebytes = bytes(response,'utf8')
+            print("*** Sending back:{}  ***".format(responsebytes))
+            conn.send('HTTP/1.1 200 OK\r\n')
+            conn.send('Content-Type: application/json\r\n')
+            #conn.sendall(response)
+            conn.write(responsebytes)
+
+        elif path == "favicon.ico":
+            with open('favicon.ico','rb') as fvfile:
+                favicon = fvfile.read()
+
+                print("*** Sending back: Favicon  ***")
+                conn.send('HTTP/1.1 200 OK\r\n')
+                conn.send('Content-Type: image/x-icon\r\n')
+                #conn.sendall(response)
+                conn.write(favicon)
 
     
     conn.close()

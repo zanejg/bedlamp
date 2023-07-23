@@ -1,6 +1,7 @@
 #!/usr/bin/python
 import sys
 import time
+import json
 
 import LED_control as LC
 import random
@@ -30,7 +31,7 @@ channels = [
 
 
 fld = LC.four_LED_driver(channels)
-fld.all_same_RGB("808080")
+#fld.all_same_RGB("808080")
 
 def check_hex(the_hex):
     """
@@ -54,6 +55,78 @@ def dimwhite(col):
 
 def all_high():
     fld.all_same_RGB("FFFFFF")
+
+
+SETTINGS_FILE = "lamp_settings.json"
+def save_setting(num):
+    """
+    Read the existing settings file if it exists or create it.
+    Then save the current state of the lamp into the selected
+    setting number then save it back to the settings file
+    """
+    present_settings = []
+    try:
+        # read what is already there
+        sfile = open(SETTINGS_FILE,"r")
+        present_settings_content = sfile.read()
+        present_settings = json.loads(present_settings_content)
+        sfile.close()
+        # open to trash what's there
+        sfile = open(SETTINGS_FILE,"w")
+
+        
+    except OSError:
+        sfile = open(SETTINGS_FILE,"w")
+        present_settings = [None for i in range(0,4)]
+        
+    
+    current_setting = fld.get_current_levels()
+    print("PRESENT={}".format(present_settings))
+    settings_to_save = [current_setting if i == num else present_settings[i]
+                        for i in range(0,4)
+    ]
+        
+    
+    sfile.write(json.dumps(settings_to_save))
+    sfile.close()
+    
+
+def apply_setting_allsame(num):
+    """
+    Check for existence of setting and apply it if it exists
+    Assuming all LEDS are the same colour
+
+    """
+    try:
+        # read what is already there
+        sfile = open(SETTINGS_FILE,"r")
+        present_settings_content = sfile.read()
+        settings = json.loads(present_settings_content)
+    except OSError:
+        print("No settings file found")
+        return
+    
+    try:
+        this_setting = settings[num]
+        # always using idx 0 as they should all be the same
+        if this_setting is None:
+            print("Null setting found")
+            return
+        fld.all_same_saved(this_setting[0])
+        return "OK"
+
+
+    except IndexError:
+        print("Bad settings index")
+        return
+
+
+
+# always power up to the first saved 
+if apply_setting_allsame(0) != "OK":
+    # or set to middle brightness
+    fld.all_same_RGB("808080")
+
 
 
 single_commands = {
@@ -101,7 +174,18 @@ def parse_command(the_command_data):
             print("parsed value={}".format(the_value))
             fld.all_same_RGB(the_value)
     elif command == "GETLEVEL":
-        pass
+        return fld.get_current_levels()
+    
+    elif command == "SAVESETTING":
+        if 'value' in the_command_data.keys():
+            the_num = the_command_data['value']
+            save_setting(the_num)
+
+    elif command == "CHOOSESETTING":
+        if 'value' in the_command_data.keys():
+            the_num = the_command_data['value']
+            apply_setting_allsame(the_num)
+    
 
 
 

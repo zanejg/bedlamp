@@ -243,13 +243,48 @@ class Direct_LED_driver(object):
         # import pdb;pdb.set_trace()
         for col,val in the_levels.items():
             self.set_led(col,val['level'])
-        
+        self.levels = the_levels
 
+        self.RGB = the_RGB
+        
+        self.setup_sequence(the_RGB, stepcount)
+    
+
+    def lights_to_saved_levels(self, the_RGB, seq_posi, stepcount=64):
+        """
+        To set the LEDS to the exact levels saved from UI
+        """
+        # first set things up
+        self.setup_sequence(the_RGB, stepcount)
+        
+        self.light_with_floats({
+            "RED": self.dim_seq['RED'][seq_posi],
+            "GREEN":self.dim_seq['GREEN'][seq_posi] ,
+            "BLUE":self.dim_seq['BLUE'][seq_posi]   
+        },reset_seq=False)
+
+        self.RGB = the_RGB
+        self.dim_posi = seq_posi
+        self.stepcount = stepcount
+
+    def get_exact_levels(self):
+        """
+        Get the save-able light values.
+        Returns a dict with RGB and sequence position
+        """
+        return {
+                     "RGB": self.RGB,
+            "seq_position": self.dim_posi
+        }
+
+
+
+    def setup_sequence(self,the_RGB, stepcount):
         seq_data = colour_sequencer.get_colour_dimming_sequence(
             the_RGB, stepcount)
         self.dim_seq = seq_data['sequences']
         self.dim_posi = seq_data['position']
-        self.levels = the_levels
+        
         # for this_val in self.dim_seq['RED']:
         #     print("{}".format(this_val))
 
@@ -294,6 +329,9 @@ class Direct_LED_driver(object):
             posi = self.stepcount -1
         elif posi < 0:
             posi = 0
+
+        self.dim_posi = posi
+
         self.light_with_floats({
             "RED": self.dim_seq['RED'][posi],
             "GREEN":self.dim_seq['GREEN'][posi] ,
@@ -345,7 +383,22 @@ class four_LED_driver(object):
     def all_same_RGB(self,the_RGB):
         for this_LED in self.LEDs:
             this_LED.light_with_RGB(the_RGB)
+
+    def all_same_saved(self, saved_levels):
+        for idx,this_LED in enumerate(self.LEDs):
+            this_LED.lights_to_saved_levels(saved_levels['RGB'], 
+                                            saved_levels['seq_position'])
     
+    def get_current_levels(self):
+        """
+        Get all of the LEDs levels
+        """
+        ret = [ll.get_exact_levels() 
+               for ll in self.LEDs]
+        print("CURRENT LEVELS = {}".format(ret))
+        return ret
+
+
     def all_same_float(self,the_duties):
         """
         For this we need a dict with a float for each col
