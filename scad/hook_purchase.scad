@@ -1,0 +1,9 @@
+
+
+MAIN_WD = 20;
+MAIN_HT = 20;
+GEN_TN = 3;
+RIDGE_HT = 8;
+
+cube([MAIN_WD, MAIN_HT, GEN_TN]);
+cube([MAIN_WD, GEN_TN, RIDGE_HT + GEN_TN]);
