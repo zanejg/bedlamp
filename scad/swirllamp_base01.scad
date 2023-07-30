@@ -5,6 +5,7 @@ $fn=100;
 IS_RIGHT_END = true;
 IS_LEFT_END = false;
 
+
 IS_AN_END_PIECE = IS_RIGHT_END || IS_LEFT_END;
 
 
