@@ -1,5 +1,6 @@
-# zedlamp
+# Bedlamp
 Zane Gilmore 2023-07-31
+<img src="bedlamp_lit.jpg" alt="Picture of lamp lit on a wall" width="500"/>
 
 ## Overview
 For building an array of big RGB LEDs. Basing code on code I wrote for another 
